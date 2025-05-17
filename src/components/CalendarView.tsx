@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
+import { Toggle } from '@/components/ui/toggle';
 
 interface CalendarViewProps {
   calendarData: CalendarData;
@@ -189,28 +190,35 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
     return null;
   };
 
+  // Extract current month data
+  const currentMonthData = calendarData[selectedMonth];
+  
+  // Get first day of month to calculate offset
+  const firstDay = new Date(2025, selectedMonth, 1).getDay();
+
   return (
-    <Card className="mb-8">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-4 px-4">
-          <h2 className="text-xl font-semibold flex items-center">
-            <Calendar className="h-5 w-5 mr-2 text-primary" />
-            Track Your Progress
+    <Card className="mb-8 shadow-lg border-primary/20">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold flex items-center text-primary">
+            <Calendar className="h-6 w-6 mr-3 text-primary" />
+            Study Calendar
           </h2>
         </div>
 
         {/* Month navigation */}
-        <div className="flex items-center justify-between mb-4 px-4">
+        <div className="flex items-center justify-between mb-6 px-1">
           <Button 
             variant="outline" 
             size="icon" 
             onClick={goToPrevMonth} 
             disabled={selectedMonth === 0}
+            className="rounded-full h-10 w-10 transition-all hover:bg-primary/10"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5" />
           </Button>
           
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             {monthNames[selectedMonth]} 2025
           </h3>
           
@@ -219,90 +227,96 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
             size="icon" 
             onClick={goToNextMonth}
             disabled={selectedMonth === 11}
+            className="rounded-full h-10 w-10 transition-all hover:bg-primary/10"
           >
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-5 w-5" />
           </Button>
         </div>
         
-        {/* Horizontal scrolling calendar */}
+        {/* Legend */}
+        <div className="flex gap-3 mb-4 justify-end">
+          <div className="flex items-center gap-1 text-xs">
+            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            <span>Studied</span>
+          </div>
+          <div className="flex items-center gap-1 text-xs">
+            <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+            <span>Partial</span>
+          </div>
+          <div className="flex items-center gap-1 text-xs">
+            <div className="w-3 h-3 rounded-full bg-red-400"></div>
+            <span>Missed</span>
+          </div>
+        </div>
+        
+        {/* Calendar view */}
         <div 
           ref={calendarRef}
-          className="custom-scrollbar flex overflow-x-auto space-x-4 pb-6 px-4 scroll-snap-x"
+          className="custom-scrollbar"
         >
-          {Object.entries(calendarData).map(([monthIndex, month]) => {
-            const monthNum = parseInt(monthIndex);
-            
-            // Get first day of month to calculate offset
-            const firstDay = new Date(2025, monthNum, 1).getDay();
-            
-            return (
-              <div 
-                key={monthNum} 
-                className="month-container min-w-full md:min-w-[600px] flex-shrink-0 scroll-snap-center"
-              >
-                {/* Day of week headers */}
-                <div className="grid grid-cols-7 mb-2">
-                  {daysOfWeek.map(day => (
-                    <div key={day} className="text-center text-xs text-gray-500 font-medium">
-                      {day}
-                    </div>
-                  ))}
+          <div className="month-container w-full">
+            {/* Day of week headers */}
+            <div className="grid grid-cols-7 mb-4">
+              {daysOfWeek.map(day => (
+                <div key={day} className="text-center font-medium text-sm text-gray-600">
+                  {day}
                 </div>
+              ))}
+            </div>
+            
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-2 md:gap-3">
+              {/* Empty cells for offset */}
+              {Array.from({ length: firstDay }).map((_, i) => (
+                <div key={`empty-${i}`} className="h-16 md:h-20"></div>
+              ))}
+              
+              {/* Day tiles */}
+              {currentMonthData && Object.entries(currentMonthData.days).map(([dayNum, day]) => {
+                const dayNumber = parseInt(dayNum);
+                const isToday = selectedMonth === currentMonth && dayNumber === currentDay;
                 
-                {/* Calendar grid */}
-                <div className="grid grid-cols-7 gap-2">
-                  {/* Empty cells for offset */}
-                  {Array.from({ length: firstDay }).map((_, i) => (
-                    <div key={`empty-${i}`} className="h-16 md:h-24"></div>
-                  ))}
-                  
-                  {/* Day tiles */}
-                  {Object.entries(month.days).map(([dayNum, day]) => {
-                    const dayNumber = parseInt(dayNum);
-                    const isToday = monthNum === currentMonth && dayNumber === currentDay;
+                return (
+                  <div
+                    ref={isToday ? todayRef : null}
+                    key={`${selectedMonth}-${dayNumber}`}
+                    className={`relative h-16 md:h-20 p-2 rounded-xl border ${getDayStatusClass(day)} 
+                      hover:shadow-md transition-all duration-200 cursor-pointer
+                      ${isToday ? 'ring-2 ring-primary shadow-lg scale-105' : ''}
+                      hover:scale-[1.02]
+                    `}
+                    onClick={() => openDayDialog(selectedMonth, dayNumber)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className={`font-medium ${isToday ? 'text-primary' : ''}`}>{dayNumber}</span>
+                      {day.studied && (
+                        <span className="text-xs font-semibold bg-white/60 px-1.5 py-0.5 rounded-full">
+                          {day.hoursStudied}h
+                        </span>
+                      )}
+                    </div>
                     
-                    return (
-                      <div
-                        ref={isToday ? todayRef : null}
-                        key={`${monthNum}-${dayNumber}`}
-                        className={`relative h-16 md:h-24 p-2 rounded-lg border ${getDayStatusClass(day)} 
-                          hover:border-primary hover:shadow-md transition-all cursor-pointer
-                          ${isToday ? 'ring-2 ring-primary' : ''}
-                        `}
-                        onClick={() => openDayDialog(monthNum, dayNumber)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <span className={`font-medium ${isToday ? 'text-primary' : ''}`}>{dayNumber}</span>
-                          {day.studied && (
-                            <span className="text-xs font-semibold">
-                              {day.hoursStudied}h
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="absolute bottom-2 right-2">
-                          {renderDayIcon(day)}
-                        </div>
-                        
-                        {(day.notes || day.justification) && (
-                          <div className="absolute bottom-2 left-2">
-                            <NoteIcon className="h-3 w-3 text-gray-400" />
-                          </div>
-                        )}
+                    <div className="absolute bottom-2 right-2">
+                      {renderDayIcon(day)}
+                    </div>
+                    
+                    {(day.notes || day.justification) && (
+                      <div className="absolute bottom-2 left-2">
+                        <NoteIcon className="h-3 w-3 text-gray-500" />
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
         
         {/* Day dialog */}
         <Dialog open={!!selectedDay} onOpenChange={(open) => !open && closeDayDialog()}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="text-primary">
                 {selectedDayInfo && 
                   `${monthNames[selectedDayInfo.month]} ${selectedDayInfo.day}, 2025`
                 }
@@ -317,10 +331,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                 {/* Studied toggle */}
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Did you study today?</span>
-                  <Button
-                    variant={selectedDay.studied ? "default" : "outline"}
-                    onClick={handleToggleStudied}
-                    className="w-20 h-10 transition-all"
+                  <Toggle
+                    pressed={selectedDay.studied}
+                    onPressedChange={() => handleToggleStudied()}
+                    className={`w-20 h-10 transition-all ${
+                      selectedDay.studied 
+                        ? 'bg-green-100 text-green-700 border-green-200'
+                        : 'bg-red-50 text-red-600 border-red-100'
+                    }`}
                   >
                     {selectedDay.studied ? (
                       <span className="flex items-center">
@@ -331,16 +349,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                         <X className="mr-1 h-4 w-4" /> No
                       </span>
                     )}
-                  </Button>
+                  </Toggle>
                 </div>
                 
                 {selectedDay.studied ? (
                   <>
                     {/* Hours studied slider */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
                       <div className="flex justify-between">
                         <span>Hours studied:</span>
-                        <span className="font-medium">{selectedDay.hoursStudied} hrs</span>
+                        <span className="font-medium text-primary">{selectedDay.hoursStudied} hrs</span>
                       </div>
                       <Slider
                         value={[selectedDay.hoursStudied]}
@@ -348,6 +366,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                         max={12}
                         step={0.5}
                         onValueChange={handleHoursChange}
+                        className="py-4"
                       />
                     </div>
                     
@@ -359,6 +378,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                         value={selectedDay.notes || ''}
                         onChange={handleNotesChange}
                         rows={3}
+                        className="resize-none"
                       />
                     </div>
                   </>
@@ -372,6 +392,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                         value={selectedDay.justification || ''}
                         onChange={handleJustificationChange}
                         rows={3}
+                        className="resize-none"
                       />
                     </div>
                   </>
@@ -379,11 +400,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
               </div>
             )}
             
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={closeDayDialog}>
                 Cancel
               </Button>
-              <Button onClick={saveDayData}>
+              <Button onClick={saveDayData} className="bg-primary hover:bg-primary/90">
                 Save
               </Button>
             </DialogFooter>

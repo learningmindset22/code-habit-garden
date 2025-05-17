@@ -63,6 +63,11 @@
   to { transform: translateX(0); opacity: 1; }
 }
 
+@keyframes scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 .animate-slide-up {
   animation: slide-up 0.5s ease-out forwards;
 }
@@ -71,25 +76,29 @@
   animation: slide-in 0.5s ease-out forwards;
 }
 
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
 .animate-pulse-soft {
   animation: pulse-soft 2s infinite ease-in-out;
 }
 
 /* Day tile status colors */
 .day-studied {
-  @apply bg-green-100 border-green-300 text-green-800;
+  @apply bg-gradient-to-br from-green-100 to-green-50 border-green-300 text-green-800;
 }
 
 .day-partial {
-  @apply bg-amber-100 border-amber-300 text-amber-800;
+  @apply bg-gradient-to-br from-amber-100 to-amber-50 border-amber-300 text-amber-800;
 }
 
 .day-missed {
-  @apply bg-red-100 border-red-300 text-red-800;
+  @apply bg-gradient-to-br from-red-100 to-red-50 border-red-300 text-red-800;
 }
 
 .day-future {
-  @apply bg-white border-gray-200 text-gray-500;
+  @apply bg-gradient-to-br from-white to-gray-50 border-gray-200 text-gray-500;
 }
 
 /* Calendar transitions */
