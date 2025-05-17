@@ -58,14 +58,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
   // Handle scrolling to months
   const scrollToMonth = (index: number) => {
     if (calendarRef.current) {
-      const months = calendarRef.current.querySelectorAll('.month-container');
-      if (months[index]) {
-        months[index].scrollIntoView({ 
-          behavior: 'smooth', 
-          inline: 'center'
-        });
-        setSelectedMonth(index);
-      }
+      setSelectedMonth(index);
     }
   };
 
@@ -197,7 +190,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
   const firstDay = new Date(2025, selectedMonth, 1).getDay();
 
   return (
-    <Card className="mb-8 shadow-lg border-primary/20">
+    <Card className="mb-8 shadow-lg border-primary/20 overflow-hidden">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold flex items-center text-primary">
@@ -213,7 +206,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
             size="icon" 
             onClick={goToPrevMonth} 
             disabled={selectedMonth === 0}
-            className="rounded-full h-10 w-10 transition-all hover:bg-primary/10"
+            className="rounded-full h-10 w-10 transition-all hover:bg-primary/10 shadow-sm"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -227,7 +220,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
             size="icon" 
             onClick={goToNextMonth}
             disabled={selectedMonth === 11}
-            className="rounded-full h-10 w-10 transition-all hover:bg-primary/10"
+            className="rounded-full h-10 w-10 transition-all hover:bg-primary/10 shadow-sm"
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
@@ -258,7 +251,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
             {/* Day of week headers */}
             <div className="grid grid-cols-7 mb-4">
               {daysOfWeek.map(day => (
-                <div key={day} className="text-center font-medium text-sm text-gray-600">
+                <div key={day} className="text-center font-medium text-sm text-gray-600 py-1 rounded-md bg-gray-50/50">
                   {day}
                 </div>
               ))}
@@ -290,7 +283,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                     <div className="flex justify-between items-start">
                       <span className={`font-medium ${isToday ? 'text-primary' : ''}`}>{dayNumber}</span>
                       {day.studied && (
-                        <span className="text-xs font-semibold bg-white/60 px-1.5 py-0.5 rounded-full">
+                        <span className="text-xs font-semibold bg-white/80 px-1.5 py-0.5 rounded-full shadow-sm">
                           {day.hoursStudied}h
                         </span>
                       )}
@@ -314,7 +307,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
         
         {/* Day dialog */}
         <Dialog open={!!selectedDay} onOpenChange={(open) => !open && closeDayDialog()}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md bg-gradient-to-br from-white to-gray-50">
             <DialogHeader>
               <DialogTitle className="text-primary">
                 {selectedDayInfo && 
@@ -336,8 +329,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                     onPressedChange={() => handleToggleStudied()}
                     className={`w-20 h-10 transition-all ${
                       selectedDay.studied 
-                        ? 'bg-green-100 text-green-700 border-green-200'
-                        : 'bg-red-50 text-red-600 border-red-100'
+                        ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200'
+                        : 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100'
                     }`}
                   >
                     {selectedDay.studied ? (
@@ -355,7 +348,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                 {selectedDay.studied ? (
                   <>
                     {/* Hours studied slider */}
-                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                    <div className="space-y-2 bg-gray-50 p-3 rounded-lg shadow-inner">
                       <div className="flex justify-between">
                         <span>Hours studied:</span>
                         <span className="font-medium text-primary">{selectedDay.hoursStudied} hrs</span>
@@ -377,8 +370,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                         placeholder="What did you learn today? Any challenges?"
                         value={selectedDay.notes || ''}
                         onChange={handleNotesChange}
-                        rows={3}
-                        className="resize-none"
+                        rows={4}
+                        className="resize-none bg-white/80 border-gray-200 focus:border-primary transition-colors"
                       />
                     </div>
                   </>
@@ -391,8 +384,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
                         placeholder="What prevented you from studying today?"
                         value={selectedDay.justification || ''}
                         onChange={handleJustificationChange}
-                        rows={3}
-                        className="resize-none"
+                        rows={4}
+                        className="resize-none bg-white/80 border-gray-200 focus:border-primary transition-colors"
                       />
                     </div>
                   </>
