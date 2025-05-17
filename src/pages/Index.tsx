@@ -2,16 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import HeroSection from '../components/HeroSection';
 import ProgressDashboard from '../components/ProgressDashboard';
-import CalendarView from '../components/CalendarView';
 import WeeklyFocus from '../components/WeeklyFocus';
 import Statistics from '../components/Statistics';
 import Confetti from '../components/Confetti';
+import MonthlyCalendar from '../components/MonthlyCalendar';
+import StudyNotesView from '../components/StudyNotesView';
+import MotivationalQuote from '../components/MotivationalQuote';
 import { CalendarData, DayData, AppState } from '../types';
 import { initializeCalendarData, calculateStreak, checkReminder } from '../utils/calendarUtils';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Calendar as CalendarIcon, BarChart } from 'lucide-react';
+import { X, Calendar as CalendarIcon, BarChart, FileText } from 'lucide-react';
 
 const Index = () => {
   // Initialize app state
@@ -124,6 +126,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container py-6">
+        {/* Motivational Quote */}
+        <MotivationalQuote />
+        
         {/* Reminder Alert */}
         {shouldShowReminder && (
           <Alert className="mb-6 bg-amber-50 border-amber-200">
@@ -150,24 +155,33 @@ const Index = () => {
           updateWeeklyFocus={updateWeeklyFocus}
         />
         
-        {/* Tabs for Calendar and Statistics */}
+        {/* Tabs for Calendar, Statistics and Notes */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="calendar" className="flex items-center">
               <CalendarIcon className="w-4 h-4 mr-2" /> Calendar
             </TabsTrigger>
             <TabsTrigger value="statistics" className="flex items-center">
               <BarChart className="w-4 h-4 mr-2" /> Statistics
             </TabsTrigger>
+            <TabsTrigger value="notes" className="flex items-center">
+              <FileText className="w-4 h-4 mr-2" /> Study Notes
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="calendar">
-            <CalendarView 
+          
+          <TabsContent value="calendar" className="animate-fade-in">
+            <MonthlyCalendar 
               calendarData={appState.calendarData}
               updateDay={updateDay}
             />
           </TabsContent>
-          <TabsContent value="statistics">
+          
+          <TabsContent value="statistics" className="animate-fade-in">
             <Statistics calendarData={appState.calendarData} />
+          </TabsContent>
+          
+          <TabsContent value="notes" className="animate-fade-in">
+            <StudyNotesView calendarData={appState.calendarData} />
           </TabsContent>
         </Tabs>
         
