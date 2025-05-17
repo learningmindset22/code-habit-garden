@@ -24,7 +24,8 @@ export function initializeCalendarData(): CalendarData {
         date: date.toISOString().split('T')[0],
         studied: false,
         hoursStudied: 0,
-        notes: ''
+        notes: '',
+        justification: ''
       };
     }
     
@@ -96,4 +97,39 @@ export function checkReminder(calendarData: CalendarData): boolean {
   
   // No studied days found in the last 3 days
   return true;
+}
+
+// Get statistics for a given time period
+export function getStatistics(calendarData: CalendarData) {
+  let totalDaysStudied = 0;
+  let totalHours = 0;
+  let mostProductiveDay = '';
+  let mostProductiveHours = 0;
+  
+  // Process all days
+  Object.values(calendarData).forEach(month => {
+    Object.values(month.days).forEach(day => {
+      if (day.studied) {
+        totalDaysStudied++;
+        totalHours += day.hoursStudied;
+        
+        if (day.hoursStudied > mostProductiveHours) {
+          mostProductiveHours = day.hoursStudied;
+          mostProductiveDay = day.date;
+        }
+      }
+    });
+  });
+  
+  // Calculate average (avoid division by zero)
+  const averageHoursPerDay = totalDaysStudied > 0 ? 
+    (totalHours / totalDaysStudied).toFixed(1) : '0.0';
+    
+  return {
+    totalDaysStudied,
+    totalHours,
+    averageHoursPerDay,
+    mostProductiveDay: mostProductiveDay ? new Date(mostProductiveDay).toLocaleDateString() : 'None',
+    mostProductiveHours
+  };
 }

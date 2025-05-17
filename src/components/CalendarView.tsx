@@ -1,12 +1,13 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CalendarData, MonthData, DayData } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, X, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Check, X, ArrowLeft, ArrowRight, Calendar } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface CalendarViewProps {
   calendarData: CalendarData;
@@ -23,12 +24,35 @@ const monthNames = [
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) => {
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  // Get current date for initial focus
+  const today = new Date();
+  const currentYear = 2025; // Hard-coded to 2025
+  const isCurrentYear = today.getFullYear() === currentYear;
+  const currentMonth = isCurrentYear ? today.getMonth() : 0; // Default to January if not 2025
+  const currentDay = isCurrentYear ? today.getDate() : 1;
+  
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
   const [selectedDay, setSelectedDay] = useState<DayData | null>(null);
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(0);
   const [selectedDayInfo, setSelectedDayInfo] = useState<{month: number, day: number} | null>(null);
   
   const calendarRef = useRef<HTMLDivElement>(null);
+  const todayRef = useRef<HTMLDivElement>(null);
+  
+  // Focus on today's day when component mounts
+  useEffect(() => {
+    // Scroll to current month
+    scrollToMonth(currentMonth);
+    
+    // Focus on today's cell (with a delay to ensure rendering is complete)
+    setTimeout(() => {
+      if (todayRef.current) {
+        todayRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }
+    }, 500);
+  }, []);
   
   // Handle scrolling to months
   const scrollToMonth = (index: number) => {
@@ -80,7 +104,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
       updateDay(selectedDayInfo.month, selectedDayInfo.day, {
         studied: selectedDay.studied,
         hoursStudied: selectedDay.hoursStudied,
-        notes: selectedDay.notes
+        notes: selectedDay.notes,
+        justification: selectedDay.justification
       });
       
       // Show toast message based on status
@@ -94,6 +119,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
             icon: "🎉"
           });
         }
+      } else if (selectedDay.justification) {
+        toast("No worries! Tomorrow is another opportunity.", {
+          icon: "🌱"
+        });
       }
       
       closeDayDialog();
@@ -130,199 +159,238 @@ const CalendarView: React.FC<CalendarViewProps> = ({ calendarData, updateDay }) 
     }
   };
   
+  // Handle justification change for non-study days
+  const handleJustificationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (selectedDay) {
+      setSelectedDay({
+        ...selectedDay,
+        justification: e.target.value
+      });
+    }
+  };
+  
   // Get day status class
   const getDayStatusClass = (day: DayData) => {
+    const isPast = new Date(day.date) < new Date();
+    
+    if (!day.studied && isPast) return 'day-missed';
     if (!day.studied) return 'day-future';
     if (day.hoursStudied < 1) return 'day-partial';
     return 'day-studied';
   };
 
-  // Get current date info
-  const today = new Date();
-  const currentYear = 2025; // Hard-coded to 2025
-  const isCurrentYear = today.getFullYear() === currentYear;
-  const currentMonth = isCurrentYear ? today.getMonth() : -1;
-  const currentDay = isCurrentYear ? today.getDate() : -1;
-  
+  // Get day icon
+  const renderDayIcon = (day: DayData) => {
+    if (day.studied) {
+      return <Check className="h-4 w-4 text-green-600" />;
+    } else if (day.justification) {
+      return <X className="h-4 w-4 text-amber-600" />;
+    } 
+    return null;
+  };
+
   return (
-    <div className="w-full mb-8">
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-4 px-4">
-        <Button 
-          variant="outline" 
-          size="icon" 
-          onClick={goToPrevMonth} 
-          disabled={selectedMonth === 0}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        
-        <h2 className="text-xl font-semibold">
-          {monthNames[selectedMonth]} 2025
-        </h2>
-        
-        <Button 
-          variant="outline" 
-          size="icon" 
-          onClick={goToNextMonth}
-          disabled={selectedMonth === 11}
-        >
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      {/* Horizontal scrolling calendar */}
-      <div 
-        ref={calendarRef}
-        className="custom-scrollbar flex overflow-x-auto space-x-4 pb-6 px-4 scroll-snap-x"
-      >
-        {Object.entries(calendarData).map(([monthIndex, month]) => {
-          const monthNum = parseInt(monthIndex);
+    <Card className="mb-8">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-4 px-4">
+          <h2 className="text-xl font-semibold flex items-center">
+            <Calendar className="h-5 w-5 mr-2 text-primary" />
+            Track Your Progress
+          </h2>
+        </div>
+
+        {/* Month navigation */}
+        <div className="flex items-center justify-between mb-4 px-4">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={goToPrevMonth} 
+            disabled={selectedMonth === 0}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           
-          // Get first day of month to calculate offset
-          const firstDay = new Date(2025, monthNum, 1).getDay();
+          <h3 className="text-lg font-semibold">
+            {monthNames[selectedMonth]} 2025
+          </h3>
           
-          return (
-            <div 
-              key={monthNum} 
-              className="month-container min-w-full md:min-w-[600px] flex-shrink-0 scroll-snap-center"
-            >
-              {/* Day of week headers */}
-              <div className="grid grid-cols-7 mb-2">
-                {daysOfWeek.map(day => (
-                  <div key={day} className="text-center text-xs text-gray-500 font-medium">
-                    {day}
-                  </div>
-                ))}
-              </div>
-              
-              {/* Calendar grid */}
-              <div className="grid grid-cols-7 gap-2">
-                {/* Empty cells for offset */}
-                {Array.from({ length: firstDay }).map((_, i) => (
-                  <div key={`empty-${i}`} className="h-16 md:h-24"></div>
-                ))}
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={goToNextMonth}
+            disabled={selectedMonth === 11}
+          >
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Horizontal scrolling calendar */}
+        <div 
+          ref={calendarRef}
+          className="custom-scrollbar flex overflow-x-auto space-x-4 pb-6 px-4 scroll-snap-x"
+        >
+          {Object.entries(calendarData).map(([monthIndex, month]) => {
+            const monthNum = parseInt(monthIndex);
+            
+            // Get first day of month to calculate offset
+            const firstDay = new Date(2025, monthNum, 1).getDay();
+            
+            return (
+              <div 
+                key={monthNum} 
+                className="month-container min-w-full md:min-w-[600px] flex-shrink-0 scroll-snap-center"
+              >
+                {/* Day of week headers */}
+                <div className="grid grid-cols-7 mb-2">
+                  {daysOfWeek.map(day => (
+                    <div key={day} className="text-center text-xs text-gray-500 font-medium">
+                      {day}
+                    </div>
+                  ))}
+                </div>
                 
-                {/* Day tiles */}
-                {Object.entries(month.days).map(([dayNum, day]) => {
-                  const dayNumber = parseInt(dayNum);
-                  const isToday = monthNum === currentMonth && dayNumber === currentDay;
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7 gap-2">
+                  {/* Empty cells for offset */}
+                  {Array.from({ length: firstDay }).map((_, i) => (
+                    <div key={`empty-${i}`} className="h-16 md:h-24"></div>
+                  ))}
                   
-                  return (
-                    <div
-                      key={`${monthNum}-${dayNumber}`}
-                      className={`relative h-16 md:h-24 p-2 rounded-lg border ${getDayStatusClass(day)} 
-                        hover:border-primary hover:shadow-md transition-all cursor-pointer
-                        ${isToday ? 'ring-2 ring-primary' : ''}
-                      `}
-                      onClick={() => openDayDialog(monthNum, dayNumber)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <span className="font-medium">{dayNumber}</span>
-                        {day.studied && (
-                          <span className="text-xs font-semibold">
-                            {day.hoursStudied}h
-                          </span>
+                  {/* Day tiles */}
+                  {Object.entries(month.days).map(([dayNum, day]) => {
+                    const dayNumber = parseInt(dayNum);
+                    const isToday = monthNum === currentMonth && dayNumber === currentDay;
+                    
+                    return (
+                      <div
+                        ref={isToday ? todayRef : null}
+                        key={`${monthNum}-${dayNumber}`}
+                        className={`relative h-16 md:h-24 p-2 rounded-lg border ${getDayStatusClass(day)} 
+                          hover:border-primary hover:shadow-md transition-all cursor-pointer
+                          ${isToday ? 'ring-2 ring-primary' : ''}
+                        `}
+                        onClick={() => openDayDialog(monthNum, dayNumber)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <span className={`font-medium ${isToday ? 'text-primary' : ''}`}>{dayNumber}</span>
+                          {day.studied && (
+                            <span className="text-xs font-semibold">
+                              {day.hoursStudied}h
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="absolute bottom-2 right-2">
+                          {renderDayIcon(day)}
+                        </div>
+                        
+                        {(day.notes || day.justification) && (
+                          <div className="absolute bottom-2 left-2">
+                            <NoteIcon className="h-3 w-3 text-gray-400" />
+                          </div>
                         )}
                       </div>
-                      
-                      {day.studied && (
-                        <div className="absolute bottom-2 right-2">
-                          <Check className="h-4 w-4 text-green-600" />
-                        </div>
-                      )}
-                      
-                      {day.notes && (
-                        <div className="absolute bottom-2 left-2">
-                          <NoteIcon className="h-3 w-3 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      {/* Day dialog */}
-      <Dialog open={!!selectedDay} onOpenChange={(open) => !open && closeDayDialog()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {selectedDayInfo && 
-                `${monthNames[selectedDayInfo.month]} ${selectedDayInfo.day}, 2025`
-              }
-            </DialogTitle>
-            <DialogDescription>
-              Update your study progress for this day
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedDay && (
-            <div className="space-y-4 pt-2">
-              {/* Studied toggle */}
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Did you study today?</span>
-                <Button
-                  variant={selectedDay.studied ? "default" : "outline"}
-                  onClick={handleToggleStudied}
-                  className="w-20 h-10 transition-all"
-                >
-                  {selectedDay.studied ? (
-                    <span className="flex items-center">
-                      <Check className="mr-1 h-4 w-4" /> Yes
-                    </span>
-                  ) : (
-                    <span className="flex items-center">
-                      <X className="mr-1 h-4 w-4" /> No
-                    </span>
-                  )}
-                </Button>
-              </div>
-              
-              {/* Hours studied slider */}
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Hours studied:</span>
-                  <span className="font-medium">{selectedDay.hoursStudied} hrs</span>
+                    );
+                  })}
                 </div>
-                <Slider
-                  value={[selectedDay.hoursStudied]}
-                  min={0}
-                  max={12}
-                  step={0.5}
-                  onValueChange={handleHoursChange}
-                  disabled={!selectedDay.studied}
-                />
               </div>
-              
-              {/* Notes */}
-              <div className="space-y-2">
-                <label className="font-medium">Notes:</label>
-                <Textarea
-                  placeholder="What did you learn today? Any challenges?"
-                  value={selectedDay.notes || ''}
-                  onChange={handleNotesChange}
-                  rows={3}
-                  disabled={!selectedDay.studied}
-                />
+            );
+          })}
+        </div>
+        
+        {/* Day dialog */}
+        <Dialog open={!!selectedDay} onOpenChange={(open) => !open && closeDayDialog()}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedDayInfo && 
+                  `${monthNames[selectedDayInfo.month]} ${selectedDayInfo.day}, 2025`
+                }
+              </DialogTitle>
+              <DialogDescription>
+                Update your study progress for this day
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedDay && (
+              <div className="space-y-4 pt-2">
+                {/* Studied toggle */}
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Did you study today?</span>
+                  <Button
+                    variant={selectedDay.studied ? "default" : "outline"}
+                    onClick={handleToggleStudied}
+                    className="w-20 h-10 transition-all"
+                  >
+                    {selectedDay.studied ? (
+                      <span className="flex items-center">
+                        <Check className="mr-1 h-4 w-4" /> Yes
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        <X className="mr-1 h-4 w-4" /> No
+                      </span>
+                    )}
+                  </Button>
+                </div>
+                
+                {selectedDay.studied ? (
+                  <>
+                    {/* Hours studied slider */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Hours studied:</span>
+                        <span className="font-medium">{selectedDay.hoursStudied} hrs</span>
+                      </div>
+                      <Slider
+                        value={[selectedDay.hoursStudied]}
+                        min={0}
+                        max={12}
+                        step={0.5}
+                        onValueChange={handleHoursChange}
+                      />
+                    </div>
+                    
+                    {/* Notes */}
+                    <div className="space-y-2">
+                      <label className="font-medium">Study notes:</label>
+                      <Textarea
+                        placeholder="What did you learn today? Any challenges?"
+                        value={selectedDay.notes || ''}
+                        onChange={handleNotesChange}
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Justification for not studying */}
+                    <div className="space-y-2">
+                      <label className="font-medium">Reason for not studying:</label>
+                      <Textarea
+                        placeholder="What prevented you from studying today?"
+                        value={selectedDay.justification || ''}
+                        onChange={handleJustificationChange}
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={closeDayDialog}>
-              Cancel
-            </Button>
-            <Button onClick={saveDayData}>
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={closeDayDialog}>
+                Cancel
+              </Button>
+              <Button onClick={saveDayData}>
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
   );
 };
 

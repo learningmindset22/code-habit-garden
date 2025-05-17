@@ -4,12 +4,14 @@ import HeroSection from '../components/HeroSection';
 import ProgressDashboard from '../components/ProgressDashboard';
 import CalendarView from '../components/CalendarView';
 import WeeklyFocus from '../components/WeeklyFocus';
+import Statistics from '../components/Statistics';
 import Confetti from '../components/Confetti';
 import { CalendarData, DayData, AppState } from '../types';
 import { initializeCalendarData, calculateStreak, checkReminder } from '../utils/calendarUtils';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { X, Calendar as CalendarIcon, BarChart } from 'lucide-react';
 
 const Index = () => {
   // Initialize app state
@@ -21,6 +23,7 @@ const Index = () => {
   });
   
   const [reminderDismissed, setReminderDismissed] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('calendar');
   
   // Load data from localStorage on first render
   useEffect(() => {
@@ -147,11 +150,26 @@ const Index = () => {
           updateWeeklyFocus={updateWeeklyFocus}
         />
         
-        {/* Calendar View */}
-        <CalendarView 
-          calendarData={appState.calendarData}
-          updateDay={updateDay}
-        />
+        {/* Tabs for Calendar and Statistics */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="calendar" className="flex items-center">
+              <CalendarIcon className="w-4 h-4 mr-2" /> Calendar
+            </TabsTrigger>
+            <TabsTrigger value="statistics" className="flex items-center">
+              <BarChart className="w-4 h-4 mr-2" /> Statistics
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="calendar">
+            <CalendarView 
+              calendarData={appState.calendarData}
+              updateDay={updateDay}
+            />
+          </TabsContent>
+          <TabsContent value="statistics">
+            <Statistics calendarData={appState.calendarData} />
+          </TabsContent>
+        </Tabs>
         
         {/* Confetti effect */}
         <Confetti 

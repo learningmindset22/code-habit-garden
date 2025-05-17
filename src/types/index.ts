@@ -4,6 +4,7 @@ export interface DayData {
   studied: boolean;
   hoursStudied: number;
   notes: string;
+  justification?: string; // Added for days not studied
 }
 
 export interface MonthData {
@@ -19,4 +20,14 @@ export interface AppState {
   weeklyFocus: string;
   streakCount: number;
   showConfetti: boolean;
+}
+
+export interface StatisticsData {
+  totalDaysStudied: number;
+  totalDaysNotStudied: number;
+  averageHoursPerDay: string;
+  mostProductiveDay: string;
+  mostProductiveHours: number;
+  longestStreak: number;
+  currentStreak: number;
 }
