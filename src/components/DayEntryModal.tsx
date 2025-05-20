@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
-import { Check, X, Brain, Clock, Smile, Frown, Meh, Zap } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { DayData } from '../types';
 import { Input } from '@/components/ui/input';
@@ -19,12 +18,12 @@ interface DayEntryModalProps {
 }
 
 const moods = [
-  { emoji: '🧠', label: 'Focused', icon: <Brain className="h-4 w-4" /> },
-  { emoji: '💪', label: 'Strong', icon: <Zap className="h-4 w-4" /> },
-  { emoji: '😊', label: 'Happy', icon: <Smile className="h-4 w-4" /> },
-  { emoji: '😐', label: 'Neutral', icon: <Meh className="h-4 w-4" /> },
-  { emoji: '😖', label: 'Struggling', icon: <Frown className="h-4 w-4" /> },
-  { emoji: '💤', label: 'Tired', icon: <Clock className="h-4 w-4" /> },
+  { emoji: '🧠', label: 'Focused' },
+  { emoji: '💪', label: 'Strong' },
+  { emoji: '😊', label: 'Happy' },
+  { emoji: '😐', label: 'Neutral' },
+  { emoji: '😖', label: 'Struggling' },
+  { emoji: '💤', label: 'Tired' },
 ];
 
 const DayEntryModal: React.FC<DayEntryModalProps> = ({ isOpen, onClose, dayData, date, onSave }) => {
@@ -52,7 +51,7 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({ isOpen, onClose, dayData,
         hoursStudied: dayData.hoursStudied,
         notes: dayData.notes || '',
         justification: dayData.justification || '',
-        mood: dayData.mood || '' // Add mood property if it exists
+        mood: dayData.mood || ''
       });
     }
   }, [dayData]);
@@ -137,13 +136,13 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({ isOpen, onClose, dayData,
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-gradient-to-br from-white to-gray-50">
+      <DialogContent className="sm:max-w-md md:max-w-sm bg-white">
         <DialogHeader>
           <DialogTitle className="text-primary">
             {formatDate(date)}
           </DialogTitle>
           <DialogDescription>
-            Record your DSA learning journey for this day
+            Record your DSA learning for this day
           </DialogDescription>
         </DialogHeader>
         
@@ -154,27 +153,23 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({ isOpen, onClose, dayData,
             <Toggle
               pressed={localDayData.studied}
               onPressedChange={handleToggleStudied}
-              className={`w-20 h-10 transition-all ${
+              className={`w-16 h-8 transition-all ${
                 localDayData.studied 
                   ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200'
                   : 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100'
               }`}
             >
               {localDayData.studied ? (
-                <span className="flex items-center">
-                  <Check className="mr-1 h-4 w-4" /> Yes
-                </span>
+                <Check className="h-4 w-4" />
               ) : (
-                <span className="flex items-center">
-                  <X className="mr-1 h-4 w-4" /> No
-                </span>
+                <X className="h-4 w-4" />
               )}
             </Toggle>
           </div>
           
           {localDayData.studied ? (
             <>
-              {/* Mood selector */}
+              {/* Mood selector - simplified */}
               <div className="space-y-2">
                 <label className="font-medium">How did you feel today?</label>
                 <div className="flex flex-wrap gap-2">
@@ -183,53 +178,60 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({ isOpen, onClose, dayData,
                       key={mood.emoji}
                       pressed={localDayData.mood === mood.emoji}
                       onPressedChange={() => handleMoodSelect(mood.emoji)}
-                      className={`flex flex-col items-center justify-center h-16 w-16 p-1 rounded-lg transition-all
+                      className={`h-10 px-3 rounded-lg transition-all
                         ${localDayData.mood === mood.emoji ? 'bg-primary/20 border-primary/30' : 'bg-white border-gray-200'}
                       `}
                     >
-                      <span className="text-xl mb-1">{mood.emoji}</span>
-                      <span className="text-xs">{mood.label}</span>
+                      <span className="text-sm">{mood.emoji} {mood.label}</span>
                     </Toggle>
                   ))}
                 </div>
               </div>
 
-              {/* Hours studied - numeric inputs */}
+              {/* Hours studied - more compact layout */}
               <div className="space-y-2">
                 <label className="font-medium">Time studied:</label>
                 <div className="flex items-center gap-2">
-                  <div className="w-20">
-                    <Label htmlFor="hours">Hours</Label>
-                    <Input
-                      id="hours"
-                      type="number"
-                      min="0"
-                      max="24"
-                      value={hours}
-                      onChange={handleHoursInputChange}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="w-20">
-                    <Label htmlFor="minutes">Minutes</Label>
-                    <Input
-                      id="minutes"
-                      type="number"
-                      min="0"
-                      max="59"
-                      value={minutes}
-                      onChange={handleMinutesInputChange}
-                      className="mt-1"
-                    />
+                  <div className="w-1/2">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="hours"
+                        type="number"
+                        min="0"
+                        max="24"
+                        value={hours}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          setHours(value);
+                          updateTotalHours(value, minutes);
+                        }}
+                        className="w-20"
+                      />
+                      <span>h</span>
+                      <Input
+                        id="minutes"
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={minutes}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          setMinutes(value);
+                          updateTotalHours(hours, value);
+                        }}
+                        className="w-20"
+                      />
+                      <span>m</span>
+                    </div>
                   </div>
                 </div>
               </div>
               
-              {/* Hours studied slider */}
-              <div className="space-y-2 bg-gray-50 p-3 rounded-lg shadow-inner">
-                <div className="flex justify-between">
+              {/* Slider for quick selection */}
+              <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                <div className="flex justify-between text-sm">
                   <span>Quick select:</span>
-                  <span className="font-medium text-primary">
+                  <span className="font-medium">
                     {hours}h {minutes > 0 ? `${minutes}m` : ''}
                   </span>
                 </div>
@@ -238,39 +240,50 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({ isOpen, onClose, dayData,
                   min={0}
                   max={12}
                   step={0.25}
-                  onValueChange={handleSliderChange}
-                  className="py-4"
+                  onValueChange={(values) => {
+                    const totalHours = values[0];
+                    const wholeHours = Math.floor(totalHours);
+                    const mins = Math.round((totalHours - wholeHours) * 60);
+                    
+                    setHours(wholeHours);
+                    setMinutes(mins);
+                    
+                    setLocalDayData(prev => ({
+                      ...prev,
+                      hoursStudied: totalHours
+                    }));
+                  }}
+                  className="py-2"
                 />
-                
-                {/* Visual time bar */}
-                <div className="w-full h-2 bg-gray-200 rounded-full mt-2 overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-green-400 to-blue-500" 
-                    style={{ width: `${Math.min(100, (localDayData.hoursStudied || 0) * 100 / 12)}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>0h</span>
-                  <span>6h</span>
-                  <span>12h</span>
-                </div>
               </div>
               
-              {/* Notes */}
+              {/* Notes - more compact */}
               <div className="space-y-2">
                 <label className="font-medium">Study notes:</label>
                 <Textarea
-                  placeholder="What did you learn today? Any challenges?"
+                  placeholder="What did you learn today?"
                   value={localDayData.notes || ''}
                   onChange={handleNotesChange}
-                  rows={4}
-                  className="resize-none bg-white/80 border-gray-200 focus:border-primary transition-colors"
+                  rows={3}
+                  className="resize-none bg-white/80 border-gray-200 focus:border-primary"
                 />
               </div>
             </>
           ) : (
             <>
-              {/* Mood selector for non-study days */}
+              {/* Reason for not studying - more compact */}
+              <div className="space-y-2">
+                <label className="font-medium">Reason for not studying:</label>
+                <Textarea
+                  placeholder="What prevented you from studying today?"
+                  value={localDayData.justification || ''}
+                  onChange={handleJustificationChange}
+                  rows={3}
+                  className="resize-none bg-white/80 border-gray-200 focus:border-primary"
+                />
+              </div>
+              
+              {/* Mood selector - simplified */}
               <div className="space-y-2">
                 <label className="font-medium">How do you feel about missing today?</label>
                 <div className="flex flex-wrap gap-2">
@@ -279,27 +292,14 @@ const DayEntryModal: React.FC<DayEntryModalProps> = ({ isOpen, onClose, dayData,
                       key={mood.emoji}
                       pressed={localDayData.mood === mood.emoji}
                       onPressedChange={() => handleMoodSelect(mood.emoji)}
-                      className={`flex flex-col items-center justify-center h-16 w-16 p-1 rounded-lg transition-all
+                      className={`h-10 px-3 rounded-lg transition-all
                         ${localDayData.mood === mood.emoji ? 'bg-primary/20 border-primary/30' : 'bg-white border-gray-200'}
                       `}
                     >
-                      <span className="text-xl mb-1">{mood.emoji}</span>
-                      <span className="text-xs">{mood.label}</span>
+                      <span className="text-sm">{mood.emoji} {mood.label}</span>
                     </Toggle>
                   ))}
                 </div>
-              </div>
-            
-              {/* Justification for not studying */}
-              <div className="space-y-2">
-                <label className="font-medium">Reason for not studying:</label>
-                <Textarea
-                  placeholder="What prevented you from studying today?"
-                  value={localDayData.justification || ''}
-                  onChange={handleJustificationChange}
-                  rows={4}
-                  className="resize-none bg-white/80 border-gray-200 focus:border-primary transition-colors"
-                />
               </div>
             </>
           )}

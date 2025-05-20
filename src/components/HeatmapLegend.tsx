@@ -29,7 +29,7 @@ const HeatmapLegend: React.FC = () => {
       
       <div className="flex items-center gap-1">
         <div className={`w-3 h-3 rounded-sm ${heatmapColors.veryHigh.replace('border-green-500', '')}`}></div>
-        <span className="text-xs">6h+ 🔥</span>
+        <span className="text-xs">6h+</span>
       </div>
     </div>
   );

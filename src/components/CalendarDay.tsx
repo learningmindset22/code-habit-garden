@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { DayData } from '../types';
-import { getHeatmapColorClass, getIntensityEmoji, formatHours } from '../utils/heatmapUtils';
+import { getHeatmapColorClass } from '../utils/heatmapUtils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Check, X, FileText } from 'lucide-react';
 
@@ -43,9 +43,6 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
       ? 'bg-amber-50 border-amber-200' 
       : 'bg-red-50 border-red-200';
   
-  // Get intensity emoji
-  const intensityEmoji = day.studied ? getIntensityEmoji(day.hoursStudied) : '';
-
   // Format date for tooltip
   const formattedDate = new Date(day.date).toLocaleDateString(undefined, {
     weekday: 'long',
@@ -70,22 +67,17 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
             <div className="flex justify-between items-start">
               <span className={`font-medium ${isTodayCell ? 'text-primary' : ''}`}>{dayNumber}</span>
               {day.studied && (
-                <div className="flex flex-col items-end">
-                  <span className="text-xs font-semibold bg-white/80 px-1.5 py-0.5 rounded-full shadow-sm">
-                    {day.hoursStudied}h
-                  </span>
-                  {intensityEmoji && (
-                    <span className="text-sm mt-0.5">{intensityEmoji}</span>
-                  )}
+                <div className="text-xs font-semibold bg-white/80 px-1.5 py-0.5 rounded-full shadow-sm">
+                  {day.hoursStudied}h
                 </div>
               )}
             </div>
             
             <div className="absolute bottom-2 right-2">
               {day.studied ? (
-                <Check className="h-4 w-4 text-green-600" />
+                <Check className="h-4 w-4 text-gray-600" />
               ) : (
-                day.justification ? <X className="h-4 w-4 text-amber-600" /> : null
+                <X className="h-4 w-4 text-gray-600" />
               )}
             </div>
             
@@ -99,7 +91,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
         <TooltipContent side="top" className="p-3 max-w-xs z-50">
           <div className="flex flex-col gap-1.5">
             <p className="font-medium">{formattedDate}</p>
-            <p className="text-sm">{day.studied ? formatHours(day.hoursStudied) : 'Not studied'}</p>
+            <p className="text-sm">{day.studied ? `${day.hoursStudied} hours studied` : 'Not studied'}</p>
             {day.mood && <p className="text-sm">Mood: {day.mood}</p>}
             {(day.notes || day.justification) && (
               <p className="text-xs text-gray-600 max-w-full line-clamp-2">

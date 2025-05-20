@@ -32,11 +32,7 @@ export const formatHours = (hours: number): string => {
   return `${hours} hours`;
 };
 
-// Get emoji based on hours studied
+// Get emoji based on hours studied - removed as per minimalist request
 export const getIntensityEmoji = (hoursStudied: number): string => {
-  if (hoursStudied === 0) return "";
-  if (hoursStudied <= 2) return "📚";
-  if (hoursStudied <= 4) return "📝";
-  if (hoursStudied <= 6) return "💪";
-  return "🔥"; // 6+ hours
+  return ""; // Return empty string to maintain function signature without emojis
 };
