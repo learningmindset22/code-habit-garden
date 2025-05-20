@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -74,7 +73,7 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
           block: 'center' 
         });
       }
-    }, 500);
+    }, 100);
   }, []);
   
   // Handle next/prev month navigation
@@ -100,6 +99,16 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
   const goToToday = () => {
     setSelectedMonth(today.getMonth());
     setSelectedYear(today.getFullYear());
+    
+    // Focus on today's cell after state update
+    setTimeout(() => {
+      if (todayRef.current) {
+        todayRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }
+    }, 100);
   };
   
   // Handle month change
@@ -112,13 +121,15 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
     setSelectedYear(year);
   };
   
-  // Open day dialog
+  // Open day dialog - using the correct month and day
   const openDayDialog = (month: number, day: number) => {
-    // For now, we'll continue to use the 2025 data as that's what we have
-    // In a full implementation, we would have data for each year/month
-    const dayData = calendarData[month]?.days[day];
-    if (dayData) {
-      setSelectedDayInfo({ month, day, data: dayData });
+    const monthData = calendarData[month];
+    if (monthData && monthData.days[day]) {
+      setSelectedDayInfo({ 
+        month, 
+        day, 
+        data: monthData.days[day]
+      });
       setIsModalOpen(true);
     }
   };
@@ -133,10 +144,11 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
   const handleSaveDayData = (data: Partial<DayData>) => {
     if (selectedDayInfo) {
       updateDay(selectedDayInfo.month, selectedDayInfo.day, data);
+      closeDayDialog();
     }
   };
 
-  // Extract current month data - for now using only 2025 data
+  // Extract current month data
   const currentMonthData = selectedYear === 2025 ? calendarData[selectedMonth] : null;
   
   // Get first day of month to calculate offset
@@ -172,7 +184,7 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
               variant="outline" 
               size="sm" 
               onClick={goToToday}
-              className="text-xs"
+              className="text-xs hover:bg-primary/10 hover:text-primary"
             >
               Today
             </Button>
@@ -289,12 +301,13 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
               {/* Day tiles */}
               {selectedYear === 2025 && currentMonthData ? (
                 // We have data for 2025
-                Object.entries(currentMonthData.days).map(([dayNum, day]) => {
-                  const dayNumber = parseInt(dayNum);
+                Array.from({ length: daysInMonth }).map((_, i) => {
+                  const dayNumber = i + 1;
+                  const day = currentMonthData.days[dayNumber];
                   const isTodayCell = isToday(dayNumber);
                   
                   return (
-                    <div key={`${selectedMonth}-${dayNumber}`} ref={isTodayCell ? todayRef : null}>
+                    <div key={`day-${selectedMonth}-${dayNumber}`} ref={isTodayCell ? todayRef : null}>
                       <CalendarDay
                         dayNumber={dayNumber}
                         day={day}
@@ -326,13 +339,15 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
         </div>
         
         {/* Day entry modal */}
-        <DayEntryModal 
-          isOpen={isModalOpen} 
-          onClose={closeDayDialog}
-          dayData={selectedDayInfo?.data || null}
-          date={selectedDayInfo?.data?.date || null}
-          onSave={handleSaveDayData}
-        />
+        {selectedDayInfo && (
+          <DayEntryModal 
+            isOpen={isModalOpen} 
+            onClose={closeDayDialog}
+            dayData={selectedDayInfo.data}
+            date={selectedDayInfo.data?.date || null}
+            onSave={handleSaveDayData}
+          />
+        )}
       </CardContent>
     </Card>
   );
