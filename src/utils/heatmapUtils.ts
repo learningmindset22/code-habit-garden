@@ -1,13 +1,13 @@
 
 import { HeatmapColors } from "../types";
 
-// Define the color palette for the heatmap
+// Define a more sophisticated color palette for the heatmap
 export const heatmapColors: HeatmapColors = {
-  none: "bg-gray-50 border-gray-200", // No study time
-  low: "bg-green-50 border-green-200", // 0-2 hours
-  medium: "bg-green-100 border-green-300", // 2-4 hours
-  high: "bg-green-200 border-green-400", // 4-6 hours
-  veryHigh: "bg-green-300 border-green-500", // 6+ hours
+  none: "bg-gray-50 border-gray-200 hover:bg-gray-100/80", // No study time
+  low: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100/80", // 0-2 hours
+  medium: "bg-emerald-100 border-emerald-300 hover:bg-emerald-200/80", // 2-4 hours
+  high: "bg-emerald-200 border-emerald-400 hover:bg-emerald-300/80", // 4-6 hours
+  veryHigh: "bg-emerald-300 border-emerald-500 hover:bg-emerald-400/80", // 6+ hours
 };
 
 // Calculate intensity class based on hours studied
@@ -35,4 +35,21 @@ export const formatHours = (hours: number): string => {
 // Get emoji based on hours studied - removed as per minimalist request
 export const getIntensityEmoji = (hoursStudied: number): string => {
   return ""; // Return empty string to maintain function signature without emojis
+};
+
+// Check if a date is in the past
+export const isDateInPast = (dateString: string): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkDate = new Date(dateString);
+  return checkDate < today;
+};
+
+// Check if a date is today
+export const isToday = (dateString: string): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkDate = new Date(dateString);
+  checkDate.setHours(0, 0, 0, 0);
+  return checkDate.getTime() === today.getTime();
 };
