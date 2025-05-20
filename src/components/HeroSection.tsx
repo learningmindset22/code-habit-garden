@@ -44,7 +44,7 @@ const HeroSection = () => {
           <Calendar className="w-8 h-8 text-primary" />
         </div>
         <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
-          My 2025 DSA Journey 🚀
+          Teja DSA Journey 🚀
         </h1>
         <p className="text-lg md:text-xl text-gray-600 mb-6 max-w-3xl mx-auto">
           Track your discipline, build habits, and grow daily.
