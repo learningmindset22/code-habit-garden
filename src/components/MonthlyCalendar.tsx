@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, Calendar, Check, X, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DayData } from '../types';
@@ -20,6 +20,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import YearPicker from './YearPicker';
+import CalendarDay from './CalendarDay';
+import HeatmapLegend from './HeatmapLegend';
 
 interface MonthlyCalendarProps {
   calendarData: Record<number, {
@@ -43,7 +45,7 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const generateYearArray = () => {
   const currentYear = new Date().getFullYear();
   const years = [];
-  for (let year = currentYear - 10; year <= currentYear + 20; year++) {
+  for (let year = currentYear - 20; year <= currentYear + 20; year++) {
     years.push(year);
   }
   return years;
@@ -132,26 +134,6 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
     if (selectedDayInfo) {
       updateDay(selectedDayInfo.month, selectedDayInfo.day, data);
     }
-  };
-  
-  // Get day status class
-  const getDayStatusClass = (day: DayData) => {
-    const isPast = new Date(day.date) < new Date();
-    
-    if (!day.studied && isPast) return 'day-missed';
-    if (!day.studied) return 'day-future';
-    if (day.hoursStudied < 1) return 'day-partial';
-    return 'day-studied';
-  };
-
-  // Get day icon
-  const renderDayIcon = (day: DayData) => {
-    if (day.studied) {
-      return <Check className="h-4 w-4 text-green-600" />;
-    } else if (day.justification) {
-      return <X className="h-4 w-4 text-amber-600" />;
-    } 
-    return null;
   };
 
   // Extract current month data - for now using only 2025 data
@@ -279,21 +261,8 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
           </div>
         </div>
         
-        {/* Legend */}
-        <div className="flex gap-3 mb-4 justify-end">
-          <div className="flex items-center gap-1 text-xs">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span>Studied</span>
-          </div>
-          <div className="flex items-center gap-1 text-xs">
-            <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-            <span>Partial</span>
-          </div>
-          <div className="flex items-center gap-1 text-xs">
-            <div className="w-3 h-3 rounded-full bg-red-400"></div>
-            <span>Missed</span>
-          </div>
-        </div>
+        {/* Heatmap Legend */}
+        <HeatmapLegend />
         
         {/* Calendar view */}
         <div 
@@ -325,34 +294,13 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
                   const isTodayCell = isToday(dayNumber);
                   
                   return (
-                    <div
-                      ref={isTodayCell ? todayRef : null}
-                      key={`${selectedMonth}-${dayNumber}`}
-                      className={`relative h-16 md:h-20 p-2 rounded-xl border ${getDayStatusClass(day)} 
-                        hover:shadow-md transition-all duration-200 cursor-pointer
-                        ${isTodayCell ? 'ring-2 ring-primary shadow-lg scale-105' : ''}
-                        hover:scale-[1.02]
-                      `}
-                      onClick={() => openDayDialog(selectedMonth, dayNumber)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <span className={`font-medium ${isTodayCell ? 'text-primary' : ''}`}>{dayNumber}</span>
-                        {day.studied && (
-                          <span className="text-xs font-semibold bg-white/80 px-1.5 py-0.5 rounded-full shadow-sm">
-                            {day.hoursStudied}h
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="absolute bottom-2 right-2">
-                        {renderDayIcon(day)}
-                      </div>
-                      
-                      {(day.notes || day.justification) && (
-                        <div className="absolute bottom-2 left-2">
-                          <NoteIcon className="h-3 w-3 text-gray-500" />
-                        </div>
-                      )}
+                    <div key={`${selectedMonth}-${dayNumber}`} ref={isTodayCell ? todayRef : null}>
+                      <CalendarDay
+                        dayNumber={dayNumber}
+                        day={day}
+                        isTodayCell={isTodayCell}
+                        onClick={() => openDayDialog(selectedMonth, dayNumber)}
+                      />
                     </div>
                   );
                 })
@@ -363,19 +311,12 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
                   const isTodayCell = isToday(dayNumber);
                   
                   return (
-                    <div
-                      ref={isTodayCell ? todayRef : null}
-                      key={`empty-day-${dayNumber}`}
-                      className={`relative h-16 md:h-20 p-2 rounded-xl border border-gray-200
-                        hover:shadow-sm transition-all duration-200 cursor-pointer bg-white/80
-                        ${isTodayCell ? 'ring-2 ring-primary shadow-lg scale-105' : ''}
-                        hover:bg-gray-50
-                      `}
-                      onClick={() => {}}
-                    >
-                      <span className={`font-medium ${isTodayCell ? 'text-primary' : ''}`}>
-                        {dayNumber}
-                      </span>
+                    <div key={`empty-day-${dayNumber}`} ref={isTodayCell ? todayRef : null}>
+                      <CalendarDay
+                        dayNumber={dayNumber}
+                        isTodayCell={isTodayCell}
+                        onClick={() => {}}
+                      />
                     </div>
                   );
                 })
@@ -396,25 +337,5 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ calendarData, updateD
     </Card>
   );
 };
-
-// Note icon
-const NoteIcon = (props: any) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-    <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
-    <line x1="9" y1="9" x2="10" y2="9" />
-    <line x1="9" y1="13" x2="15" y2="13" />
-    <line x1="9" y1="17" x2="15" y2="17" />
-  </svg>
-);
 
 export default MonthlyCalendar;

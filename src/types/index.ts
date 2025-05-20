@@ -6,6 +6,7 @@ export interface DayData {
   notes: string;
   justification?: string; // Added for days not studied
   mood?: string; // Added for mood tracking
+  intensity?: number; // Added for heatmap intensity calculation
 }
 
 export interface MonthData {
@@ -31,4 +32,12 @@ export interface StatisticsData {
   mostProductiveHours: number;
   longestStreak: number;
   currentStreak: number;
+}
+
+export interface HeatmapColors {
+  none: string;
+  low: string;
+  medium: string;
+  high: string;
+  veryHigh: string;
 }
