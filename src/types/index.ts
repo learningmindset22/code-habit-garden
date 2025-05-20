@@ -5,6 +5,7 @@ export interface DayData {
   hoursStudied: number;
   notes: string;
   justification?: string; // Added for days not studied
+  mood?: string; // Added for mood tracking
 }
 
 export interface MonthData {
